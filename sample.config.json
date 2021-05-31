@@ -1,0 +1,13 @@
+{
+    "hash_salt": "1324342342424",
+    "secret_key": "secret",
+
+    "backend": {
+        "connection_string": "postgres://someone@somewhere.com:3131",
+        "debug": false
+    },
+
+    "server": {
+        "port": 3000
+    }
+}
