@@ -140,7 +140,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		claims := user.Claims.(jwt.MapClaims)
 		userId := claims["id"].(float64)
 		username := claims["user"].(string)
-		ctx.Database.Create(&types.SpotifyAuthToken{Id: userId, Username: username, Token: spotifyToken.Token})
+		ctx.Database.Create(&types.SpotifyAuthToken{Id: int(userId), Username: username, Token: spotifyToken.Token})
 		return c.SendStatus(fiber.StatusAccepted)
 	})
 
