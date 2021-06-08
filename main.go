@@ -17,19 +17,14 @@ var logger = log.New(os.Stdout)
 
 const (
 	BuildName    = "Lyrix Backend"
-	BuildVersion = ""
+	BuildVersion = "(local dev build)"
 	BuildTime    = ""
 )
 
 func main() {
 
 	command := os.Args[len(os.Args)-1]
-
-	if BuildVersion != "" || BuildTime != "" {
-		logger.Infof("%s %s Build:%s", BuildName, BuildVersion, BuildTime)
-	} else {
-		logger.Infof("%s (local dev build)", BuildName)
-	}
+	logger.Infof("%s Build:%s %s", BuildName, BuildVersion, BuildTime)
 
 	if !strings.HasSuffix(command, ".json") {
 		// the user has not provided any commands along with the executable name
