@@ -19,9 +19,7 @@ import (
 	jwtware "github.com/gofiber/jwt/v2"
 )
 
-
 var logger = log.New(os.Stdout)
-
 
 func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 
@@ -140,7 +138,14 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		claims := user.Claims.(jwt.MapClaims)
 		userId := claims["id"].(float64)
 		username := claims["user"].(string)
-		ctx.Database.Create(&types.SpotifyAuthToken{Id: int(userId), Username: username, Token: spotifyToken.Token})
+		if err := ctx.Database.Model(&types.SpotifyAuthToken{}).Where("username = ?", username).Update("token", spotifyToken.Token).Error; err != nil {
+			// always handle error like this, cause errors maybe happened when connection failed or something.
+			// record not found...
+			if gorm.IsRecordNotFoundError(err) {
+				ctx.Database.Create(&types.SpotifyAuthToken{Id: int(userId), Username: username, Token: spotifyToken.Token}) // create new record from newUser
+			}
+		}
+
 		return c.SendStatus(fiber.StatusAccepted)
 	})
 
