@@ -171,7 +171,10 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			return err
 		}
 
-		user := c.Locals("user").(*jwt.Token)
+		user, ok := c.Locals("user").(*jwt.Token)
+		if !ok {
+			return fiber.StatusUnauthorized
+		}
 		claims := user.Claims.(jwt.MapClaims)
 		userId := claims["id"].(float64)
 		username := claims["user"].(string)
@@ -193,12 +196,12 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		resp := ctx.Database.Model(
 			&types.CurrentListeningSongLocal{}).
 			Where("id = ?", userId).
-            Updates(map[string]interface{}{
-                "track": currentSong.Track,
-                "artist": currentSong.Artist,
-                "source": currentSong.Source,
-                "url": currentSong.Url,
-            })
+			Updates(map[string]interface{}{
+				"track":  currentSong.Track,
+				"artist": currentSong.Artist,
+				"source": currentSong.Source,
+				"url":    currentSong.Url,
+			})
 		err = resp.Error
 		if err != nil || resp.RowsAffected == 0 {
 
@@ -300,8 +303,8 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			return errors.New("not connected yet")
 		}
 
-        // ctx.Database.Delete()
-        return c.SendStatus(fiber.StatusInternalServerError) 
+		// ctx.Database.Delete()
+		return c.SendStatus(fiber.StatusInternalServerError)
 
 		/*err = resp.Error
 		if err != nil || resp.RowsAffected == 0 {
