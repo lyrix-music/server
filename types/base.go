@@ -9,8 +9,8 @@ import (
 type SongMeta struct {
 	Track  string `json:"track"`
 	Artist string `json:"artist"`
-	Source string `json:"omitempty,source"`
-	Url    string `json:"omitempty,url"`
+	Source string `json:"source,omitempty"`
+	Url    string `json:"url,omitempty"`
 }
 
 type UserAccount struct {
@@ -47,8 +47,8 @@ type CurrentListeningSongLocal struct {
 	Track  string `json:"track"`
 	Artist string `json:"artist"`
 
-	Source string `json:"omitempty,source"`
-	Url    string `json:"omitempty,url"`
+	Source string `json:"source,omitempty"`
+	Url    string `json:"url,omitempty"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -70,6 +70,6 @@ type Context struct {
 
 type Friend struct {
 	Id             int    `gorm:"primary_key"`
-	Username       string `json:"omitempty,username"`
+	Username       string `json:"username,omitempty"`
 	FriendUsername string `json:"friend_username"`
 }

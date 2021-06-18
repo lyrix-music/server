@@ -186,7 +186,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			err := ctx.Database.Model(
 				&types.CurrentListeningSongLocal{}).
 				Where("id = ?", userId).
-				Updates(map[string]interface{}{"track": "", "artist": ""}).
+                Updates(map[string]interface{}{"track": "", "artist": "", "source": "", "url": ""}).
 				Error
 			if err != nil {
 				logger.Warn(err)
@@ -214,7 +214,10 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 					Id:       int(userId),
 					Username: username,
 					Track:    currentSong.Track,
-					Artist:   currentSong.Artist}) // create new record from newUser
+					Artist:   currentSong.Artist,
+                    Source:   currentSong.Source,
+                    Url:      currentSong.Url,
+                }) // create new record from newUser
 			} else if err != nil {
 				logger.Fatal(err)
 			}
