@@ -171,10 +171,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			return err
 		}
 
-		user, ok := c.Locals("user").(*jwt.Token)
-		if !ok {
-            return c.SendStatus(fiber.StatusUnauthorized)
-		}
+		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 		userId := claims["id"].(float64)
 		username := claims["user"].(string)
