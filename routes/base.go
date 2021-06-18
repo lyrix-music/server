@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 
 	"time"
@@ -100,7 +101,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	app.Get("/", accessible)
 
 	// JWT Middleware
-	app.Use("/user", jwtware.New(jwtware.Config{
+	app.Use("/user", "/people", jwtware.New(jwtware.Config{
 		SigningKey: []byte(cfg.SecretKey),
 	}))
 
@@ -192,7 +193,12 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		resp := ctx.Database.Model(
 			&types.CurrentListeningSongLocal{}).
 			Where("id = ?", userId).
-			Updates(map[string]interface{}{"track": currentSong.Track, "artist": currentSong.Artist})
+            Updates(map[string]interface{}{
+                "track": currentSong.Track,
+                "artist": currentSong.Artist,
+                "source": currentSong.Source,
+                "url": currentSong.Url,
+            })
 		err = resp.Error
 		if err != nil || resp.RowsAffected == 0 {
 
@@ -220,9 +226,112 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		userInDatabase := types.CurrentListeningSongLocal{}
 		resp := ctx.Database.First(&userInDatabase, "id = ?", userId)
 		if resp.Error != nil {
+			logger.Warn(resp.Error)
 			return c.JSON(types.CurrentListeningSongLocal{})
 		}
 		return c.JSON(userInDatabase)
+	})
+
+	app.Get("/user/friends", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		username := claims["user"].(string)
+		var friends []types.Friend
+		resp := ctx.Database.First(&friends, "username = ?", username)
+		if resp.Error != nil {
+			logger.Warn(resp.Error)
+			return c.JSON([]types.Friend{})
+		}
+		return c.JSON(friends)
+	})
+
+	app.Post("/user/friend/add", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		username := claims["user"].(string)
+
+		var friend types.Friend
+		err := json.Unmarshal(c.Body(), &friend)
+		if err != nil {
+			return err
+		}
+		friendInDatabase := types.Friend{}
+
+		// check if the user is already a friend
+		resp := ctx.Database.First(&friendInDatabase, "username = ? AND friend_username = ?", username, friend)
+		if resp.Error == nil {
+			// the user already exists hmmmm
+			logger.Warnf("%s is already connected with %s", username, friend.FriendUsername)
+			return c.SendStatus(fiber.StatusAlreadyReported)
+		}
+
+		count := -1
+		ctx.Database.Model(&types.Friend{}).Count(&count)
+		if count == -1 {
+			err := errors.New("failed to get count of the number of records in friends table")
+			logger.Warn(err)
+			return err
+		}
+		resp = ctx.Database.Create(&types.Friend{Username: username, Id: count, FriendUsername: friend.FriendUsername})
+		err = resp.Error
+		if err != nil {
+			return err
+		}
+		return c.SendStatus(fiber.StatusAccepted)
+	})
+
+	app.Post("/user/friend/remove", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		username := claims["user"].(string)
+
+		var friend types.Friend
+		err := json.Unmarshal(c.Body(), &friend)
+		if err != nil {
+			return err
+		}
+		friendInDatabase := types.Friend{}
+
+		// check if the user is already a friend
+		resp := ctx.Database.First(&friendInDatabase, "username = ? AND friend_username = ?", username, friend)
+		if resp.Error != nil {
+			// the user already exists hmmmm
+			logger.Warnf("%s is not connected with %s", username, friend.FriendUsername)
+			return errors.New("not connected yet")
+		}
+
+        // ctx.Database.Delete()
+        return c.SendStatus(fiber.StatusInternalServerError) 
+
+		/*err = resp.Error
+		if err != nil || resp.RowsAffected == 0 {
+
+			// always handle error like this, cause errors maybe happened when connection failed or something.
+			// record not found...
+			if resp.RowsAffected == 0 || gorm.IsRecordNotFoundError(err) {
+				logger.Info("Creating a new record for current song")
+				ctx.Database.Create(&types.CurrentListeningSongLocal{
+					Id:       int(userId),
+					Username: username,
+					Track:    currentSong.Track,
+					Artist:   currentSong.Artist}) // create new record from newUser
+			} else if err != nil {
+				logger.Fatal(err)
+			}
+
+		}*/
+	})
+
+	app.Get("/people/all", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		userId := claims["id"].(float64)
+		var usersInDatabase []types.UserAccount
+		resp := ctx.Database.Where("id != ?", userId).Select("username", "id").Find(&usersInDatabase)
+		if resp.Error != nil {
+			return c.JSON([]types.UserAccount{})
+		}
+		return c.JSON(usersInDatabase)
 	})
 
 	return app, nil

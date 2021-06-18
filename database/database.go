@@ -30,6 +30,7 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 	// Automatically create the tables
 	db.AutoMigrate(&types.UserAccount{})
 	db.AutoMigrate(&types.CurrentListeningSongLocal{})
+	db.AutoMigrate(&types.Friend{})
 
 	db.AutoMigrate(&types.SpotifyAuthToken{})
 

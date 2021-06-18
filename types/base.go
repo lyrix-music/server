@@ -3,18 +3,21 @@ package types
 import (
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type SongMeta struct {
 	Track  string `json:"track"`
 	Artist string `json:"artist"`
+	Source string `json:"omitempty,source"`
+	Url    string `json:"omitempty,url"`
 }
 
 type UserAccount struct {
 	Id             int    `gorm:"primary_key" json:"id"`
 	Username       string `json:"username"`
-	TelegramId     int    `json:"telegram_id"`
-	HashedPassword string
+	TelegramId     int    `json:"-"`
+	HashedPassword string `json:"-"`
 }
 
 type UserAccountRegister struct {
@@ -43,6 +46,12 @@ type CurrentListeningSongLocal struct {
 
 	Track  string `json:"track"`
 	Artist string `json:"artist"`
+
+	Source string `json:"omitempty,source"`
+	Url    string `json:"omitempty,url"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type SpotifyAuthToken struct {
@@ -57,4 +66,10 @@ type SpotifyAuthTokenRegisterRequest struct {
 
 type Context struct {
 	Database *gorm.DB
+}
+
+type Friend struct {
+	Id             int    `gorm:"primary_key"`
+	Username       string `json:"omitempty,username"`
+	FriendUsername string `json:"friend_username"`
 }
