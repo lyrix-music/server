@@ -101,9 +101,13 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	app.Get("/", accessible)
 
 	// JWT Middleware
-	app.Use("/user", "/people", jwtware.New(jwtware.Config{
+	app.Use("/user", jwtware.New(jwtware.Config{
 		SigningKey: []byte(cfg.SecretKey),
 	}))
+	app.Use("/people", jwtware.New(jwtware.Config{
+		SigningKey: []byte(cfg.SecretKey),
+	}))
+
 
 	// Restricted Routes
 	app.Get("/user/welcome", func(c *fiber.Ctx) error {
