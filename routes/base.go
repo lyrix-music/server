@@ -7,7 +7,6 @@ import (
 	"github.com/srevinsaju/lyrix/backend/services/lastfm"
 	"os"
 	"strconv"
-
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -256,23 +255,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		logger.Info("Attempting to update")
 		// logger.Info(currentSong)
 
-		if lastfm.ServerSupportsLastFm(ctx.Config) {
-			logger.Info("server supports lastfm, attempting scrobble")
-			lastListenedSong := types.CurrentListeningSongLocal{}
-			resp := ctx.Database.First(&lastListenedSong, "id = ?", userId)
-			logger.Info("received last listened song", lastListenedSong)
-			if resp.Error == nil && resp.RowsAffected != 0 {
-
-				if lastListenedSong.Track != currentSong.Track {
-					logger.Infof("Scrobbling new track for user. " +
-						"Song change detected from %s to %s", lastListenedSong.Track, currentSong.Track)
-					go lastfm.Scrobble(ctx, lastListenedSong, userId)
-				}
-			} else {
-				logger.Warn(resp.Error)
-			}
-
-		}
 		if currentSong.Artist == "" || currentSong.Track == "" {
 
 			err := ctx.Database.Model(
@@ -286,7 +268,25 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			}
 			return c.SendStatus(fiber.StatusAccepted)
 		} else {
-			go lastfm.UpdateNowPlaying(ctx, *currentSong, userId)
+			if lastfm.ServerSupportsLastFm(ctx.Config) {
+				logger.Info("server supports lastfm, attempting scrobble")
+				lastListenedSong := types.CurrentListeningSongLocal{}
+				resp := ctx.Database.First(&lastListenedSong, "id = ?", userId)
+				logger.Info("received last listened song", lastListenedSong)
+				if resp.Error == nil && resp.RowsAffected != 0 {
+
+					if lastListenedSong.Track != currentSong.Track {
+						logger.Infof("Scrobbling new track for user. " +
+							"Song change detected from %s to %s", lastListenedSong.Track, currentSong.Track)
+						go lastfm.Scrobble(ctx, lastListenedSong, userId)
+						go lastfm.UpdateNowPlaying(ctx, *currentSong, userId)
+					}
+				} else {
+					logger.Warn(resp.Error)
+				}
+
+			}
+
 		}
 		resp := ctx.Database.Model(
 			&types.CurrentListeningSongLocal{}).
