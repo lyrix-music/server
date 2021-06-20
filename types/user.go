@@ -2,6 +2,7 @@ package types
 
 import (
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 	"time"
 )
 
@@ -54,3 +55,10 @@ type CurrentListeningSongLocal struct {
 	UpdatedAt time.Time
 }
 
+func (sm CurrentListeningSongLocal) GetFirstArtist() string {
+	if strings.Contains(sm.Artist, ", ") {
+		firstArtist := strings.Split(sm.Artist, ",")[0]
+		return strings.Trim(firstArtist, " ")
+	}
+	return sm.Artist
+}

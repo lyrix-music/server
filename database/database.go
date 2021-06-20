@@ -34,6 +34,7 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 
 	db.AutoMigrate(&types.SpotifyAuthToken{})
 	db.AutoMigrate(&types.LastFmAuthToken{})
+	db.AutoMigrate(&types.LastFmSessionKey{})
 
 	return db, nil
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/shkh/lastfm-go/lastfm"
+	lxlfm "github.com/srevinsaju/lyrix/backend/services/lastfm"
 	"os"
 	"strings"
 
@@ -50,14 +50,7 @@ func main() {
 	}
 	defer db.Close()
 
-	var lastFmApi *lastfm.Api
-	if cfg.Services.LastFm.ApiKey != "" && cfg.Services.LastFm.SharedSecret != "" {
-		lastFmApi = lastfm.New(cfg.Services.LastFm.ApiKey, cfg.Services.LastFm.SharedSecret)
-		logger.Info("Last.fm support has been enabled.")
-		logger.Infof("last.fm authorize url: %s",
-			lastFmApi.GetAuthRequestUrl(fmt.Sprintf("%s/callback/lastfm/token", cfg.Server.PublicEndpoint)),
-		)
-	}
+	lastFmApi := lxlfm.New(cfg)
 	// create a context
 	ctx := &types.Context{Database: db, Config: cfg, LastFm: lastFmApi}
 

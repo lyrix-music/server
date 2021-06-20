@@ -3,7 +3,6 @@ package routes
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/srevinsaju/lyrix/backend/internal/helpers"
 	"github.com/srevinsaju/lyrix/backend/services/lastfm"
 	"os"
@@ -146,6 +145,10 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		SigningKey: []byte(cfg.SecretKey),
 	}))
 
+	app.Use("/connect/lastfm", jwtware.New(jwtware.Config{
+		SigningKey: []byte(cfg.SecretKey),
+	}))
+
 
 	// Restricted Routes
 	app.Get("/user/welcome", func(c *fiber.Ctx) error {
@@ -253,9 +256,25 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		logger.Info("Attempting to update")
 		// logger.Info(currentSong)
 
-		go lastfm.UpdateNowPlaying(ctx, *currentSong, userId)
+		if lastfm.ServerSupportsLastFm(ctx.Config) {
+			logger.Info("server supports lastfm, attempting scrobble")
+			lastListenedSong := types.CurrentListeningSongLocal{}
+			resp := ctx.Database.First(&lastListenedSong, "id = ?", userId)
+			logger.Info("received last listened song", lastListenedSong)
+			if resp.Error == nil && resp.RowsAffected != 0 {
 
+				if lastListenedSong.Track != currentSong.Track {
+					logger.Infof("Scrobbling new track for user. " +
+						"Song change detected from %s to %s", lastListenedSong.Track, currentSong.Track)
+					go lastfm.Scrobble(ctx, lastListenedSong, userId)
+				}
+			} else {
+				logger.Warn(resp.Error)
+			}
+
+		}
 		if currentSong.Artist == "" || currentSong.Track == "" {
+
 			err := ctx.Database.Model(
 				&types.CurrentListeningSongLocal{}).
 				Where("id = ?", userId).
@@ -266,6 +285,8 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 				return c.SendStatus(fiber.StatusNotFound)
 			}
 			return c.SendStatus(fiber.StatusAccepted)
+		} else {
+			go lastfm.UpdateNowPlaying(ctx, *currentSong, userId)
 		}
 		resp := ctx.Database.Model(
 			&types.CurrentListeningSongLocal{}).
@@ -469,17 +490,34 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	})
 
 
-	app.Get("/connect/lastfm", func(c *fiber.Ctx) error {
-		return c.Redirect(
-			ctx.LastFm.GetAuthRequestUrl(
-				fmt.Sprintf("%s/callback/lastfm", cfg.Frontend.Url)),
-				fiber.StatusTemporaryRedirect)
-	})
-
 
 	app.Get("/connect/spotify", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotImplemented)
 	})
+
+	if ctx.LastFm == nil {
+		return app, nil
+	}
+
+	app.Get("/connect/lastfm", func(c *fiber.Ctx) error {
+		token, err := ctx.LastFm.GetToken()
+		if err != nil {
+			return err
+		}
+
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		userId := claims["id"].(float64)
+		username := claims["user"].(string)
+
+		go lastfm.StoreAuthToken(ctx, username, userId, token)
+		return c.JSON(map[string]string{
+			"redirect": ctx.LastFm.GetAuthTokenUrl(token),
+		})
+
+	})
+
+
 
 	return app, nil
 }

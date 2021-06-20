@@ -16,8 +16,6 @@ func (sm SongMeta) GetFirstArtist() string {
 		return strings.Trim(firstArtist, " ")
 	}
 	return sm.Artist
-
-
 }
 
 
