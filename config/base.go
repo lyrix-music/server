@@ -17,6 +17,20 @@ type BackendConfig struct {
 
 type HttpServerConfig struct {
 	Port int `json:"port"`
+	Name string `json:"name"`
+	PublicEndpoint string `json:"public_endpoint"`
+}
+
+type LastFmConfig struct {
+	ApiKey string `json:"api_key"`
+	SharedSecret string `json:"shared_secret"`
+}
+
+type ServicesConfig struct {
+	LastFm LastFmConfig `json:"last_fm,omitempty"`
+}
+type FrontendConfig struct {
+	Url string `json:"url"`
 }
 
 type Config struct {
@@ -24,6 +38,8 @@ type Config struct {
 	Server    HttpServerConfig `json:"server"`
 	SecretKey string           `json:"secret_key"`
 	HashSalt string `json:"hash_salt"`
+	Services ServicesConfig `json:"services,omitempty"`
+	Frontend FrontendConfig `json:"frontend,omitempty"`
 }
 
 func ParseFromFile(path string) Config {
