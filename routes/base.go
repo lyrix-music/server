@@ -15,6 +15,10 @@ import (
 	"github.com/withmandala/go-log"
 	"golang.org/x/crypto/bcrypt"
 
+	sl "github.com/srevinsaju/swaglyrics-go"
+	slTypes "github.com/srevinsaju/swaglyrics-go/types"
+
+
 	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -332,6 +336,77 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		}
 		return c.JSON(userInDatabase)
 	})
+
+
+	app.Get("/user/player/local/current_song/love", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		userId := claims["id"].(float64)
+		userInDatabase := types.CurrentListeningSongLocal{}
+		resp := ctx.Database.First(&userInDatabase, "id = ?", userId)
+		if resp.Error != nil || resp.RowsAffected == 0 {
+			// user is not listening to any songs
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+		resp = ctx.Database.First(
+			&types.LikedSong{}, "id = ? AND track = ? AND artist = ?",
+			userId, userInDatabase.Track, userInDatabase.Artist)
+
+		if resp.Error != nil || resp.RowsAffected == 0 {
+			// this is the first attempt to like this
+			likedTrack := types.LikedSong{Track: userInDatabase.Track, Artist: userInDatabase.Artist, Id: int(userId)}
+			resp = ctx.Database.Create(likedTrack)
+			if resp.Error != nil {
+				logger.Warn(resp.Error)
+				return c.SendStatus(fiber.StatusInternalServerError)
+			} else {
+				return c.SendStatus(fiber.StatusAccepted)
+			}
+		} else {
+			return c.SendStatus(fiber.StatusAlreadyReported)
+		}
+	})
+
+
+	app.Get("/user/player/local/current_song/unlove", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		userId := claims["id"].(float64)
+		userInDatabase := types.CurrentListeningSongLocal{}
+		resp := ctx.Database.First(&userInDatabase, "id = ?", userId)
+		if resp.Error != nil || resp.RowsAffected == 0 {
+			// user is not listening to any songs
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+
+		resp = ctx.Database.First(
+			&types.LikedSong{}, "id = ? AND track = ? AND artist = ?",
+			userId, userInDatabase.Track, userInDatabase.Artist)
+		return nil
+	})
+
+	app.Get("/user/player/local/current_song/lyrics", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		userId := claims["id"].(float64)
+		userInDatabase := types.CurrentListeningSongLocal{}
+		resp := ctx.Database.First(&userInDatabase, "id = ?", userId)
+		if resp.Error != nil || resp.RowsAffected == 0 {
+			// user is not listening to any songs
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+
+		lyrics, err := sl.GetLyrics(slTypes.Song{
+			Track: userInDatabase.Track,
+			Artist: userInDatabase.Artist,
+		})
+		if err != nil {
+			return err
+		}
+		return c.SendString(lyrics)
+
+	})
+
 
 	app.Get("/user/dot/all", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)

@@ -55,6 +55,16 @@ type CurrentListeningSongLocal struct {
 	UpdatedAt time.Time
 }
 
+
+type LikedSong struct {
+	Id int `gorm:"primary_key" json:"id"`
+	Track string `json:"track"`
+	Artist string `json:"artist"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+
 func (sm CurrentListeningSongLocal) GetFirstArtist() string {
 	if strings.Contains(sm.Artist, ", ") {
 		firstArtist := strings.Split(sm.Artist, ",")[0]
