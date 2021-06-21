@@ -338,6 +338,37 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	})
 
 
+	app.Get("/user/player/local/current_song/similar", func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		userId := claims["id"].(float64)
+		userInDatabase := types.CurrentListeningSongLocal{}
+		resp := ctx.Database.First(&userInDatabase, "id = ?", userId)
+		if resp.Error != nil || resp.RowsAffected == 0 || userInDatabase.Track == "" {
+			logger.Warn(resp.Error)
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+
+		similar, err := ctx.LastFm.Track.GetSimilar(map[string]interface{}{
+			"artist": userInDatabase.GetFirstArtist(),
+			"track":  userInDatabase.Track,
+		})
+		if err != nil {
+			return err
+		}
+
+		songs := make([]types.SongMeta, len(similar.Tracks))
+
+		for i := range similar.Tracks {
+			track := similar.Tracks[i].Name
+			artist := similar.Tracks[i].Artist.Name
+			songs = append(songs, types.SongMeta{Track: track, Artist: artist})
+		}
+
+		return c.JSON(songs)
+	})
+
+
 	app.Get("/user/player/local/current_song/love", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
@@ -400,6 +431,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			Track: userInDatabase.Track,
 			Artist: userInDatabase.Artist,
 		})
+		logger.Infof("Request for lyrics: %s", lyrics)
 		if err != nil {
 			return err
 		}
