@@ -51,6 +51,7 @@ type CurrentListeningSongLocal struct {
 
 	Source string `json:"source,omitempty"`
 	Url    string `json:"url,omitempty"`
+	Scrobble bool `json:"scrobble,omitempty"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

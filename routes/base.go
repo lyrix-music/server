@@ -272,7 +272,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			}
 			return c.SendStatus(fiber.StatusAccepted)
 		} else {
-			if lastfm.ServerSupportsLastFm(ctx.Config) {
+			if lastfm.ServerSupportsLastFm(ctx.Config) && currentSong.Scrobble {
 				logger.Info("server supports lastfm, attempting scrobble")
 				lastListenedSong := types.CurrentListeningSongLocal{}
 				resp := ctx.Database.First(&lastListenedSong, "id = ?", userId)
