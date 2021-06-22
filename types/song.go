@@ -18,4 +18,6 @@ func (sm SongMeta) GetFirstArtist() string {
 	return sm.Artist
 }
 
-
+func (sm SongMeta) GetCurrentListeningSong() CurrentListeningSongLocal {
+	return CurrentListeningSongLocal{Track: sm.Track, Artist: sm.Artist}
+}

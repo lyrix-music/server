@@ -1,6 +1,9 @@
 package types
 
 import (
+
+	sl "github.com/srevinsaju/swaglyrics-go"
+	slTypes "github.com/srevinsaju/swaglyrics-go/types"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 	"time"
@@ -71,4 +74,15 @@ func (sm CurrentListeningSongLocal) GetFirstArtist() string {
 		return strings.Trim(firstArtist, " ")
 	}
 	return sm.Artist
+}
+
+func (sm CurrentListeningSongLocal) GetCleanedArtistName() string {
+	artist := strings.Replace(sm.GetFirstArtist(), " - Topic", "", -1)
+	artist = strings.Replace(artist, " - Music", "", -1)
+	strippedArtist := sl.Stripper(slTypes.Song{Artist: sm.Artist, Track: ""})
+	strippedArtist = strings.TrimRight(strippedArtist, "-")
+	if strippedArtist == "" {
+		return artist
+	}
+	return strippedArtist
 }

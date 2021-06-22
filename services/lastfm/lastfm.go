@@ -24,7 +24,7 @@ func UpdateNowPlaying(ctx *types.Context, song types.SongMeta, userId float64) {
 	}
 
 	resp1, err := lastfmApi.Track.UpdateNowPlaying(map[string]interface{}{
-		"artist": song.GetFirstArtist(),
+		"artist": song.GetCurrentListeningSong().GetCleanedArtistName(),
 		"track":  song.Track,
 	})
 	logger.Infof("Received response from last.fm, %s", resp1)
@@ -45,7 +45,7 @@ func Scrobble(ctx *types.Context, song types.CurrentListeningSongLocal, userId f
 	}
 
 	resp1, err := lastfmApi.Track.Scrobble(map[string]interface{}{
-		"artist": song.GetFirstArtist(),
+		"artist": song.GetCleanedArtistName(),
 		"track":  song.Track,
 		"timestamp": song.UpdatedAt.Unix(),
 	})

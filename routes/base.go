@@ -350,7 +350,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		}
 
 		similar, err := ctx.LastFm.Track.GetSimilar(map[string]interface{}{
-			"artist": userInDatabase.GetFirstArtist(),
+			"artist": userInDatabase.GetCleanedArtistName(),
 			"track":  userInDatabase.Track,
 		})
 		if err != nil {
