@@ -56,7 +56,9 @@ func main() {
 
 	// create a http rest api instance
 	app, err := routes.Initialize(cfg, ctx)
-	if err != nil {logger.Fatal(err)}
+	if err != nil {
+		logger.Fatal(err)
+	}
 	app.Listen(fmt.Sprintf(":%d", cfg.Server.Port))
 
 }

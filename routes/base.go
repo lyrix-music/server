@@ -18,7 +18,6 @@ import (
 	sl "github.com/srevinsaju/swaglyrics-go"
 	slTypes "github.com/srevinsaju/swaglyrics-go/types"
 
-
 	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -50,6 +49,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	app.Use(mwLogger.New())
 	// Register
 	app.Post("/register", func(c *fiber.Ctx) error {
+		// data:UserAccountRegister
 		user := &types.UserAccountRegister{}
 
 		err := json.Unmarshal(c.Body(), user)
@@ -88,6 +88,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	app.Use("/login", limiter.New())
 	// Login route
 	app.Post("/login", func(c *fiber.Ctx) error {
+		// data:UserAccountRegister
 		user := &types.UserAccountRegister{}
 
 		err := json.Unmarshal(c.Body(), user)
@@ -116,6 +117,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	})
 
 	app.Get("/user/exists", func(c *fiber.Ctx) error {
+		// data:UserAccountRegister
 		user := &types.UserAccountRegister{}
 
 		err := json.Unmarshal(c.Body(), user)
@@ -151,7 +153,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	app.Use("/connect/lastfm", jwtware.New(jwtware.Config{
 		SigningKey: []byte(cfg.SecretKey),
 	}))
-
 
 	// Restricted Routes
 	app.Get("/user/welcome", func(c *fiber.Ctx) error {
@@ -190,6 +191,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 
 	// POST /user/service/lastfm/token
 	app.Post("/user/service/lastfm/token", func(c *fiber.Ctx) error {
+		// data:LastFmAuthTokenRegisterRequest
 		lastFmToken := &types.LastFmAuthTokenRegisterRequest{}
 
 		err := json.Unmarshal(c.Body(), lastFmToken)
@@ -207,6 +209,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 
 	// POST /user/player/spotify/token
 	app.Post("/user/player/spotify/token", func(c *fiber.Ctx) error {
+		// data:SpotifyAuthTokenRegisterRequest
 		spotifyToken := &types.SpotifyAuthTokenRegisterRequest{}
 
 		err := json.Unmarshal(c.Body(), spotifyToken)
@@ -219,7 +222,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		userId := claims["id"].(float64)
 		username := claims["user"].(string)
 		tr := ctx.Database.Model(&types.SpotifyAuthToken{}).Where("username = ?", username).Update("token", spotifyToken.Token)
-		if gorm.IsRecordNotFoundError(tr.Error) || tr.RowsAffected == 0{
+		if gorm.IsRecordNotFoundError(tr.Error) || tr.RowsAffected == 0 {
 			// always handle error like this, cause errors maybe happened when connection failed or something.
 			// record not found...
 			ctx.Database.Create(&types.SpotifyAuthToken{Id: int(userId), Username: username, Token: spotifyToken.Token}) // create new record from newUser
@@ -243,8 +246,8 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return c.JSON(userInDatabase)
 	})
 
-
 	app.Post("/user/player/local/current_song", func(c *fiber.Ctx) error {
+		// data:SongMeta
 		currentSong := &types.SongMeta{}
 
 		err := json.Unmarshal(c.Body(), currentSong)
@@ -264,7 +267,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			err := ctx.Database.Model(
 				&types.CurrentListeningSongLocal{}).
 				Where("id = ?", userId).
-                Updates(map[string]interface{}{"track": "", "artist": "", "source": "", "url": ""}).
+				Updates(map[string]interface{}{"track": "", "artist": "", "source": "", "url": ""}).
 				Error
 			if err != nil {
 				logger.Warn(err)
@@ -280,7 +283,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 				if resp.Error == nil && resp.RowsAffected != 0 {
 
 					if lastListenedSong.Track != currentSong.Track {
-						logger.Infof("Scrobbling new track for user. " +
+						logger.Infof("Scrobbling new track for user. "+
 							"Song change detected from %s to %s", lastListenedSong.Track, currentSong.Track)
 						go lastfm.Scrobble(ctx, lastListenedSong, userId)
 						go lastfm.UpdateNowPlaying(ctx, *currentSong, userId)
@@ -313,9 +316,9 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 					Username: username,
 					Track:    currentSong.Track,
 					Artist:   currentSong.Artist,
-                    Source:   currentSong.Source,
-                    Url:      currentSong.Url,
-                }) // create new record from newUser
+					Source:   currentSong.Source,
+					Url:      currentSong.Url,
+				}) // create new record from newUser
 			} else if err != nil {
 				logger.Fatal(err)
 			}
@@ -336,7 +339,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		}
 		return c.JSON(userInDatabase)
 	})
-
 
 	app.Get("/user/player/local/current_song/similar", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
@@ -368,7 +370,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return c.JSON(songs)
 	})
 
-
 	app.Get("/user/player/local/current_song/love", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
@@ -397,7 +398,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			return c.SendStatus(fiber.StatusAlreadyReported)
 		}
 	})
-
 
 	app.Get("/user/player/local/current_song/unlove", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
@@ -428,7 +428,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		}
 
 		lyrics, err := sl.GetLyrics(slTypes.Song{
-			Track: userInDatabase.Track,
+			Track:  userInDatabase.Track,
 			Artist: userInDatabase.Artist,
 		})
 		logger.Infof("Request for lyrics: %s", lyrics)
@@ -438,7 +438,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return c.SendString(lyrics)
 
 	})
-
 
 	app.Get("/user/dot/all", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
@@ -454,6 +453,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	})
 
 	app.Post("/user/dot/add", func(c *fiber.Ctx) error {
+		// data:Dot
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 		username := claims["user"].(string)
@@ -578,7 +578,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			return c.SendStatus(fiber.StatusBadRequest)
 		}
 
-
 		// the homeserver of the user matches the homeserver of the friend
 		// so we need to retrieve the data from the database and send it off
 		if targetUser.Homeserver == ctx.Config.Server.Name {
@@ -595,8 +594,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		// TODO: do this later
 		return c.SendStatus(fiber.StatusNotImplemented)
 	})
-
-
 
 	app.Get("/connect/spotify", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotImplemented)
@@ -623,8 +620,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		})
 
 	})
-
-
 
 	return app, nil
 }
