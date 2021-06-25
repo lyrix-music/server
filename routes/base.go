@@ -46,7 +46,9 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return false, nil
 	}
 
-	app.Use(mwLogger.New())
+    app.Use(mwLogger.New())
+
+    app.Use(cors.New())
 	// Register
 	app.Post("/register", func(c *fiber.Ctx) error {
 		// data:UserAccountRegister
