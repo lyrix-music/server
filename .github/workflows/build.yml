@@ -1,0 +1,36 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - v*.*
+
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: Build
+      run: |
+        go build -ldflags "-s -w" .
+
+    - name: Release
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        wget https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
+        chmod +x pyuploadtool-x86_64.AppImage
+        ./pyuploadtool-x86_64.AppImage backend
+
+
