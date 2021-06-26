@@ -6,6 +6,7 @@ pipeline {
         sh '''go build .
 ls -al'''
         sh '''mv backend "$TARGET_DIR/jenkins/bin/."
+whoami
 sudo sytemctl restart lyrix-backend'''
       }
     }
