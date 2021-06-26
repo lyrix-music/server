@@ -5,7 +5,8 @@ pipeline {
       steps {
         sh '''go build .
 ls -al'''
-        sh 'mv backend "$TARGET_DIR/jenkins/bin/."'
+        sh '''mv backend "$TARGET_DIR/jenkins/bin/."
+sudo sytemctl restart lyrix-backend'''
       }
     }
 
