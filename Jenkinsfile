@@ -5,15 +5,12 @@ pipeline {
       steps {
         sh '''go build .
 ls -al'''
-        archiveArtifacts(artifacts: 'backend', caseSensitive: true, onlyIfSuccessful: true)
+        sh 'mv backend "$TARGET_DIR/jenkins/bin/."'
       }
     }
 
-    stage('deploy') {
-      steps {
-        copyArtifacts(projectName: '/server', target: '/home/bots/jenkins/bin/', flatten: true)
-      }
-    }
-
+  }
+  environment {
+    TARGET_DIR = '/home/bots'
   }
 }
