@@ -11,7 +11,7 @@ ls -al'''
 
     stage('deploy') {
       steps {
-        copyArtifacts(projectName: 'server', target: '/home/bots/jenkins/bin/')
+        copyArtifacts(projectName: '/server', target: '/home/bots/jenkins/bin/', flatten: true)
       }
     }
 
