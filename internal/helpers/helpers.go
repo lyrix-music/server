@@ -2,7 +2,7 @@ package helpers
 
 import (
 	"errors"
-	"github.com/srevinsaju/lyrix/backend/types"
+	"github.com/lyrix-music/server/types"
 	"strings"
 )
 

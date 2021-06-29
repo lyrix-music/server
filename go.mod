@@ -1,4 +1,4 @@
-module github.com/srevinsaju/lyrix/backend
+module github.com/lyrix-music/server
 
 go 1.16
 

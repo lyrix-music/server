@@ -3,7 +3,7 @@ package types
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/shkh/lastfm-go/lastfm"
-	"github.com/srevinsaju/lyrix/backend/config"
+	"github.com/lyrix-music/server/config"
 )
 
 

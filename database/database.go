@@ -10,8 +10,8 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
-	"github.com/srevinsaju/lyrix/backend/config"
-	"github.com/srevinsaju/lyrix/backend/types"
+	"github.com/lyrix-music/server/config"
+	"github.com/lyrix-music/server/types"
 )
 
 var logger = log.New(os.Stdout)

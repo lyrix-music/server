@@ -3,8 +3,8 @@ package lastfm
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/shkh/lastfm-go/lastfm"
-	"github.com/srevinsaju/lyrix/backend/config"
-	"github.com/srevinsaju/lyrix/backend/types"
+	"github.com/lyrix-music/server/config"
+	"github.com/lyrix-music/server/types"
 	"github.com/withmandala/go-log"
 	"os"
 )

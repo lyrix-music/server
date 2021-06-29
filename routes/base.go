@@ -3,15 +3,16 @@ package routes
 import (
 	"encoding/json"
 	"errors"
-	"github.com/srevinsaju/lyrix/backend/internal/helpers"
-	"github.com/srevinsaju/lyrix/backend/services/lastfm"
+	"github.com/lyrix-music/server/internal/helpers"
+	"github.com/lyrix-music/server/meta"
+	"github.com/lyrix-music/server/services/lastfm"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/jinzhu/gorm"
-	"github.com/srevinsaju/lyrix/backend/config"
-	"github.com/srevinsaju/lyrix/backend/types"
+	"github.com/lyrix-music/server/config"
+	"github.com/lyrix-music/server/types"
 	"github.com/withmandala/go-log"
 	"golang.org/x/crypto/bcrypt"
 
@@ -50,6 +51,10 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
     app.Use(mwLogger.New())
 
     app.Use(cors.New())
+
+	app.Get("/version", func(c *fiber.Ctx) error {
+		return c.SendString(meta.BuildVersion)
+	})
 	// Register
 	app.Post("/register", func(c *fiber.Ctx) error {
 		// data:UserAccountRegister

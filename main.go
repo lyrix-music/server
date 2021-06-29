@@ -2,30 +2,26 @@ package main
 
 import (
 	"fmt"
-	lxlfm "github.com/srevinsaju/lyrix/backend/services/lastfm"
+	"github.com/lyrix-music/server/meta"
+	lxlfm "github.com/lyrix-music/server/services/lastfm"
 	"os"
 	"strings"
 
 	"github.com/withmandala/go-log"
 
-	"github.com/srevinsaju/lyrix/backend/config"
-	"github.com/srevinsaju/lyrix/backend/database"
-	"github.com/srevinsaju/lyrix/backend/routes"
-	"github.com/srevinsaju/lyrix/backend/types"
+	"github.com/lyrix-music/server/config"
+	"github.com/lyrix-music/server/database"
+	"github.com/lyrix-music/server/routes"
+	"github.com/lyrix-music/server/types"
 )
 
 var logger = log.New(os.Stdout)
 
-const (
-	BuildName    = "Lyrix Backend"
-	BuildVersion = "(local dev build)"
-	BuildTime    = ""
-)
 
 func main() {
 
 	command := os.Args[len(os.Args)-1]
-	logger.Infof("%s Build:%s %s", BuildName, BuildVersion, BuildTime)
+	logger.Infof("%s Build:%s %s", meta.AppName, meta.BuildVersion, meta.BuildTime)
 
 	if !strings.HasSuffix(command, ".json") {
 		// the user has not provided any commands along with the executable name
