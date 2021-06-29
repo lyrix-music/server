@@ -373,12 +373,17 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			trackMeta := similar.Tracks[i]
 			track := trackMeta.Name
 			artist := trackMeta.Artist.Name
+			albumArt := ""
+			if len(trackMeta.Images) != 0 {
+				albumArt = trackMeta.Images[len(trackMeta.Images) - 1].Url
+			}
 			songs = append(songs,
 				types.SongMeta{
 					Track: track,
 					Artist: artist,
 					Source: "last.fm",
 					Url: trackMeta.Url,
+					AlbumArt: albumArt,
 				})
 		}
 
