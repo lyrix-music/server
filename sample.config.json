@@ -1,13 +1,25 @@
 {
-    "hash_salt": "1324342342424",
-    "secret_key": "secret",
+    "hash_salt": "32488cad-5ecc-432b-b5f2-3e94f023e18b",
+    "secret_key": "9225925e-4631-4517-abbc-e45cbe6a5e85",
 
     "backend": {
-        "connection_string": "postgres://someone@somewhere.com:3131",
+        "connection_string": "",
         "debug": false
     },
 
+    "services": {
+        "last_fm": {
+            "api_key": "",
+            "shared_secret": ""
+        }
+    },
+
     "server": {
-        "port": 3000
+        "name": "example.com",
+        "port": 3000,
+        "public_endpoint": "https://example.com"
+    },
+    "frontend": {
+        "url": "https://web.example.com"
     }
 }
