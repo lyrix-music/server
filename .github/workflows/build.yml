@@ -23,7 +23,7 @@ jobs:
 
     - name: Build
       run: |
-        go build -ldflags "-s -w" .
+        go build -ldflags="-X 'github.com/lyrix-music/server/meta.BuildTime=$(date +%s)' -X 'github.com/lyrix-music/server/meta.BuildVersion=$(git describe --always)' -s -w" .
 
     - name: Release
       env:
@@ -32,5 +32,3 @@ jobs:
         wget https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
         chmod +x pyuploadtool-x86_64.AppImage
         ./pyuploadtool-x86_64.AppImage backend
-
-
