@@ -20,9 +20,9 @@ import (
 
 	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	mwLogger "github.com/gofiber/fiber/v2/middleware/logger"
-    "github.com/gofiber/fiber/v2/middleware/cors"
 	jwtware "github.com/gofiber/jwt/v2"
 )
 
@@ -365,9 +365,16 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		songs := make([]types.SongMeta, len(similar.Tracks))
 
 		for i := range similar.Tracks {
-			track := similar.Tracks[i].Name
-			artist := similar.Tracks[i].Artist.Name
-			songs = append(songs, types.SongMeta{Track: track, Artist: artist})
+			trackMeta := similar.Tracks[i]
+			track := trackMeta.Name
+			artist := trackMeta.Artist.Name
+			songs = append(songs,
+				types.SongMeta{
+					Track: track,
+					Artist: artist,
+					Source: "last.fm",
+					Url: trackMeta.Url,
+				})
 		}
 
 		return c.JSON(songs)
