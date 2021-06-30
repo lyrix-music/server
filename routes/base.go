@@ -384,6 +384,8 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 					Source: "last.fm",
 					Url: trackMeta.Url,
 					AlbumArt: albumArt,
+					Mbid: trackMeta.Mbid,
+					ArtistMbid: trackMeta.Artist.Mbid,
 				})
 		}
 

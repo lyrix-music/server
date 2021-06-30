@@ -10,6 +10,8 @@ type SongMeta struct {
 	Url    string `json:"url,omitempty"`
 	Scrobble bool `json:"scrobble,omitempty"`
 	AlbumArt string `json:"album_art"`
+	Mbid string `json:"mbid,omitempty"`
+	ArtistMbid string `json:"artist_mbid,omitempty"`
 }
 
 func (sm SongMeta) GetFirstArtist() string {
