@@ -12,6 +12,7 @@ type SongMeta struct {
 	AlbumArt string `json:"album_art"`
 	Mbid string `json:"mbid,omitempty"`
 	ArtistMbid string `json:"artist_mbid,omitempty"`
+	IsRepeat bool `json:"is_repeat"`
 }
 
 func (sm SongMeta) GetFirstArtist() string {

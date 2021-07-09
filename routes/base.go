@@ -290,7 +290,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 				logger.Info("received last listened song", lastListenedSong)
 				if resp.Error == nil && resp.RowsAffected != 0 {
 
-					if lastListenedSong.Track != currentSong.Track {
+					if lastListenedSong.Track != currentSong.Track || currentSong.IsRepeat {
 						logger.Infof("Scrobbling new track for user. "+
 							"Song change detected from %s to %s", lastListenedSong.Track, currentSong.Track)
 						go lastfm.Scrobble(ctx, lastListenedSong, userId)
