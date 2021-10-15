@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-
 var UserIdParseError = errors.New("the user id is not fully qualified, eg: @something@somewhere.xyz")
+
 // var logger = log.New(os.Stdout)
 
 func ParseFullUserId(userId string) (types.User, error) {

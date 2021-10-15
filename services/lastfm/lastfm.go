@@ -2,19 +2,17 @@ package lastfm
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/shkh/lastfm-go/lastfm"
 	"github.com/lyrix-music/server/config"
 	"github.com/lyrix-music/server/types"
+	"github.com/shkh/lastfm-go/lastfm"
 	"github.com/withmandala/go-log"
 	"os"
 )
 
-
 var logger = log.New(os.Stdout)
 
-
 func UpdateNowPlaying(ctx *types.Context, song types.SongMeta, userId float64) {
-	if ! ServerSupportsLastFm(ctx.Config) {
+	if !ServerSupportsLastFm(ctx.Config) {
 		return
 	}
 
@@ -35,7 +33,7 @@ func UpdateNowPlaying(ctx *types.Context, song types.SongMeta, userId float64) {
 }
 
 func Scrobble(ctx *types.Context, song types.CurrentListeningSongLocal, userId float64) {
-	if ! ServerSupportsLastFm(ctx.Config) {
+	if !ServerSupportsLastFm(ctx.Config) {
 		return
 	}
 
@@ -45,8 +43,8 @@ func Scrobble(ctx *types.Context, song types.CurrentListeningSongLocal, userId f
 	}
 
 	resp1, err := lastfmApi.Track.Scrobble(map[string]interface{}{
-		"artist": song.GetCleanedArtistName(),
-		"track":  song.Track,
+		"artist":    song.GetCleanedArtistName(),
+		"track":     song.Track,
 		"timestamp": song.UpdatedAt.Unix(),
 	})
 	logger.Infof("Received response from last.fm, %s", resp1)
@@ -58,7 +56,7 @@ func Scrobble(ctx *types.Context, song types.CurrentListeningSongLocal, userId f
 
 func StoreAuthToken(ctx *types.Context, username string, userId float64, token string) {
 	tr := ctx.Database.Model(&types.LastFmAuthToken{}).Where("id = ?", userId).Update("token", token)
-	if gorm.IsRecordNotFoundError(tr.Error) || tr.RowsAffected == 0{
+	if gorm.IsRecordNotFoundError(tr.Error) || tr.RowsAffected == 0 {
 		// always handle error like this, cause errors maybe happened when connection failed or something.
 		// record not found...
 
@@ -71,7 +69,7 @@ func StoreAuthToken(ctx *types.Context, username string, userId float64, token s
 
 func StoreSessionKey(ctx *types.Context, username string, userId float64, sk string) {
 	tr := ctx.Database.Model(&types.LastFmSessionKey{}).Where("id = ?", userId).Update("session_key", sk)
-	if gorm.IsRecordNotFoundError(tr.Error) || tr.RowsAffected == 0{
+	if gorm.IsRecordNotFoundError(tr.Error) || tr.RowsAffected == 0 {
 		// always handle error like this, cause errors maybe happened when connection failed or something.
 		// record not found...
 
@@ -82,11 +80,9 @@ func StoreSessionKey(ctx *types.Context, username string, userId float64, sk str
 	return
 }
 
-
 func ServerSupportsLastFm(cfg config.Config) bool {
 	return cfg.Services.LastFm.ApiKey != "" && cfg.Services.LastFm.SharedSecret != ""
 }
-
 
 func New(cfg config.Config) *lastfm.Api {
 	if ServerSupportsLastFm(cfg) {
@@ -94,7 +90,6 @@ func New(cfg config.Config) *lastfm.Api {
 	}
 	return nil
 }
-
 
 func Login(ctx *types.Context, userId float64) *lastfm.Api {
 	if !ServerSupportsLastFm(ctx.Config) {

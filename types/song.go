@@ -4,15 +4,15 @@ import "strings"
 
 // SongMeta represents a song on the Lyrix Database
 type SongMeta struct {
-	Track  string `json:"track"`
-	Artist string `json:"artist"`
-	Source string `json:"source,omitempty"`
-	Url    string `json:"url,omitempty"`
-	Scrobble bool `json:"scrobble,omitempty"`
-	AlbumArt string `json:"album_art"`
-	Mbid string `json:"mbid,omitempty"`
+	Track      string `json:"track"`
+	Artist     string `json:"artist"`
+	Source     string `json:"source,omitempty"`
+	Url        string `json:"url,omitempty"`
+	Scrobble   bool   `json:"scrobble,omitempty"`
+	AlbumArt   string `json:"album_art"`
+	Mbid       string `json:"mbid,omitempty"`
 	ArtistMbid string `json:"artist_mbid,omitempty"`
-	IsRepeat bool `json:"is_repeat"`
+	IsRepeat   bool   `json:"is_repeat"`
 }
 
 func (sm SongMeta) GetFirstArtist() string {

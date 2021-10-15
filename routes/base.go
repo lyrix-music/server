@@ -48,9 +48,9 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return false, nil
 	}
 
-    app.Use(mwLogger.New())
+	app.Use(mwLogger.New())
 
-    app.Use(cors.New())
+	app.Use(cors.New())
 
 	app.Get("/version", func(c *fiber.Ctx) error {
 		return c.SendString(meta.BuildVersion)
@@ -375,16 +375,16 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			artist := trackMeta.Artist.Name
 			albumArt := ""
 			if len(trackMeta.Images) != 0 {
-				albumArt = trackMeta.Images[len(trackMeta.Images) - 1].Url
+				albumArt = trackMeta.Images[len(trackMeta.Images)-1].Url
 			}
 			songs = append(songs,
 				types.SongMeta{
-					Track: track,
-					Artist: artist,
-					Source: "last.fm",
-					Url: trackMeta.Url,
-					AlbumArt: albumArt,
-					Mbid: trackMeta.Mbid,
+					Track:      track,
+					Artist:     artist,
+					Source:     "last.fm",
+					Url:        trackMeta.Url,
+					AlbumArt:   albumArt,
+					Mbid:       trackMeta.Mbid,
 					ArtistMbid: trackMeta.Artist.Mbid,
 				})
 		}

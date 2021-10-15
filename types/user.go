@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-	Username string `json:"username"`
+	Username   string `json:"username"`
 	Homeserver string `json:"homeserver"`
 }
 
@@ -39,7 +39,6 @@ func (uar UserAccountRegister) Hash() (*UserAccount, error) {
 	return &UserAccount{Id: uar.Id, Username: uar.Username, TelegramId: uar.TelegramId, HashedPassword: string(rawHash)}, nil
 }
 
-
 // CurrentListeningSongLocal represents a song which the user
 // is currently listening on the local player
 type CurrentListeningSongLocal struct {
@@ -49,23 +48,21 @@ type CurrentListeningSongLocal struct {
 	Track  string `json:"track"`
 	Artist string `json:"artist"`
 
-	Source string `json:"source,omitempty"`
-	Url    string `json:"url,omitempty"`
-	Scrobble bool `json:"scrobble,omitempty"`
+	Source   string `json:"source,omitempty"`
+	Url      string `json:"url,omitempty"`
+	Scrobble bool   `json:"scrobble,omitempty"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
-
 
 type LikedSong struct {
-	Id int `gorm:"primary_key" json:"id"`
-	Track string `json:"track"`
-	Artist string `json:"artist"`
+	Id        int    `gorm:"primary_key" json:"id"`
+	Track     string `json:"track"`
+	Artist    string `json:"artist"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
-
 
 func (sm CurrentListeningSongLocal) GetFirstArtist() string {
 	if strings.Contains(sm.Artist, ", ") {

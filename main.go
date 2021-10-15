@@ -17,13 +17,12 @@ import (
 
 var logger = log.New(os.Stdout)
 
-
 func main() {
 
 	command := os.Args[len(os.Args)-1]
 	logger.Infof("%s Build:%s %s", meta.AppName, meta.BuildVersion, meta.BuildTime)
 
-	if !strings.HasSuffix(command, ".json") {
+	if !strings.HasSuffix(command, ".json") && !strings.HasSuffix(command, ".yaml") {
 		// the user has not provided any commands along with the executable name
 		// so, we should show the usage
 		logger.Info("To load an existing configuration: ")
