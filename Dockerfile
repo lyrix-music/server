@@ -18,4 +18,4 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o /go/bin/l
 FROM scratch
 COPY --from=builder /go/bin/lyrix-server /go/bin/lyrix-server
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-ENTRYPOINT ["/go/bin/lyrix-server", "/etc/lyrix/server/config.json"]
+ENTRYPOINT ["/go/bin/lyrix-server", "/etc/lyrix/server/config.yaml"]
