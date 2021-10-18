@@ -49,6 +49,20 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	}
 
 	app.Use(cors.New())
+	limits := limiter.New(limiter.Config{
+		Next: func(c *fiber.Ctx) bool {
+			return c.IP() == "127.0.0.1"
+		},
+		Max:        20,
+		Expiration: 30 * time.Second,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			id := c.Get("X-Forwarded-for")
+			if id == "" {
+				return c.IP()
+			}
+			return id
+		},
+	})
 
 	// Unauthenticated route
 	app.Get("/", accessible)
@@ -58,6 +72,8 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	app.Get("/version", func(c *fiber.Ctx) error {
 		return c.SendString(meta.BuildVersion)
 	})
+
+	app.Use("/register", limits)
 	// Register
 	app.Post("/register", func(c *fiber.Ctx) error {
 		// data:UserAccountRegister
@@ -95,8 +111,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return c.SendStatus(fiber.StatusAccepted)
 
 	})
-
-	app.Use("/login", limiter.New())
+	app.Use("/login", limits)
 	// Login route
 	app.Post("/login", func(c *fiber.Ctx) error {
 		// data:UserAccountRegister
