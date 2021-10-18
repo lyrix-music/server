@@ -22,7 +22,7 @@ type UserAccount struct {
 type UserAccountRegister struct {
 	Id         int    `json:"id"`
 	Username   string `json:"username"`
-	TelegramId int    `json:"telegram_id"`
+	TelegramId int    `json:"telegram_id,omitempty"`
 	Password   string `json:"password"`
 }
 

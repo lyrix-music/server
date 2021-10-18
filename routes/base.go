@@ -48,9 +48,12 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return false, nil
 	}
 
-	app.Use(mwLogger.New())
-
 	app.Use(cors.New())
+
+	// Unauthenticated route
+	app.Get("/", accessible)
+
+	app.Use(mwLogger.New())
 
 	app.Get("/version", func(c *fiber.Ctx) error {
 		return c.SendString(meta.BuildVersion)
@@ -145,10 +148,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		return c.JSON(map[string]string{"exists": "yes"})
 
 	})
-
-	// Unauthenticated route
-	app.Get("/", accessible)
-
 	// JWT Middleware
 
 	app.Use("/user", jwtware.New(jwtware.Config{
