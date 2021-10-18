@@ -104,7 +104,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		}
 		userHashed.Id = count + 1
 		logger.Infof("Registration from user %s", user.Username)
-		if user.Username == "" || user.Password == "" || user.TelegramId == 0 {
+		if user.Username == "" || user.Password == "" {
 			return c.SendStatus(fiber.StatusUnauthorized)
 		}
 		ctx.Database.Create(&userHashed)
