@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lyrix-music/server/internal/helpers"
 	"github.com/lyrix-music/server/meta"
+	"github.com/lyrix-music/server/ops"
 	"github.com/lyrix-music/server/services/lastfm"
 	"os"
 	"strconv"
@@ -21,7 +22,7 @@ import (
 	sl "github.com/srevinsaju/swaglyrics-go"
 	slTypes "github.com/srevinsaju/swaglyrics-go/types"
 
-	jwt "github.com/form3tech-oss/jwt-go"
+	"github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -32,9 +33,8 @@ import (
 
 var logger = log.New(os.Stdout)
 
-
 type Client struct {
-	conn *websocket.Conn
+	conn  *websocket.Conn
 	alive bool
 }
 
@@ -52,11 +52,11 @@ func addLyricsKey(d map[string]interface{}) map[string]interface{} {
 }
 
 type StreamingHub struct {
-	clients map[float64]map[uuid.UUID]*Client
-	mu sync.Mutex
+	clients map[int]map[uuid.UUID]*Client
+	mu      sync.Mutex
 }
 
-func (h *StreamingHub) SendAllClientsForUserId(userId float64, d map[string]interface{}) {
+func (h *StreamingHub) SendAllClientsForUserId(userId int, d map[string]interface{}) {
 	c, ok := h.clients[userId]
 	if !ok {
 		return
@@ -82,7 +82,7 @@ func (h *StreamingHub) SendAllClientsForUserId(userId float64, d map[string]inte
 				logger.Warn("Failed to write Json", c, err)
 				h.mu.Lock()
 				v.alive = false
-				v.conn.Close()
+				_ = v.conn.Close()
 				delete(c, k)
 				h.mu.Unlock()
 			}
@@ -90,12 +90,10 @@ func (h *StreamingHub) SendAllClientsForUserId(userId float64, d map[string]inte
 	}
 }
 
-
-
 func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
-	h := &StreamingHub{clients: map[float64]map[uuid.UUID]*Client{}}
+	h := &StreamingHub{clients: map[int]map[uuid.UUID]*Client{}}
 	logger.Infof("Preparing listener")
 
 	isUserExists := func(username string) (bool, error) {
@@ -241,10 +239,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 	app.Use("/user", jwtware.New(jwtware.Config{
 		SigningKey: []byte(cfg.SecretKey),
 	}))
-	app.Use("/ws", jwtware.New(jwtware.Config{
-		SigningKey: []byte(cfg.SecretKey),
-	}))
-
 
 	app.Use("/dot", jwtware.New(jwtware.Config{
 		SigningKey: []byte(cfg.SecretKey),
@@ -402,7 +396,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 			"url":    currentSong.Url,
 		}
 		go func() {
-			h.SendAllClientsForUserId(userId, songUpdate)
+			h.SendAllClientsForUserId(int(userId), songUpdate)
 		}()
 
 		resp := ctx.Database.Model(
@@ -436,38 +430,68 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 		userId := claims["id"].(float64)
-		userInDatabase := types.CurrentListeningSongLocal{}
-		resp := ctx.Database.First(&userInDatabase, "id = ?", userId)
-		if resp.Error != nil {
-			logger.Warn(resp.Error)
-			return c.JSON(types.CurrentListeningSongLocal{})
-		}
-		return c.JSON(userInDatabase)
+		currentSong := ops.GetCurrentSongForUserId(ctx, int(userId))
+		return c.JSON(currentSong)
 	})
 
-	app.Get("/ws/user/player/local/current_song", websocket.New(func(c *websocket.Conn) {
+	app.Get("/user/player/local/current_song/ws", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
-		userId := claims["id"].(float64)
+		userId := int(claims["id"].(float64))
 
-		logger.Info("Loading websocket connections for user_id", userId)
 		_, ok := h.clients[userId]
-		u := uuid.New()
 		if !ok {
 			logger.Info("Creating websocket instance for user_id", userId)
 			h.mu.Lock()
 			h.clients[userId] = map[uuid.UUID]*Client{}
-
 			h.mu.Unlock()
 		}
-		_, ok = h.clients[userId]
-		if !ok {
-			logger.Warn("Couldn't find created websocket client for %s with uuid:%s", userId, u)
+		u := uuid.New()
+		h.mu.Lock()
+		h.clients[userId][u] = &Client{conn: nil, alive: false}
+		h.mu.Unlock()
+		return c.JSON(map[string]uuid.UUID{"id": u})
+	})
+
+	app.Get("/ws/:id/:userId/player/local/current_song", websocket.New(func(c *websocket.Conn) {
+		userId, err := strconv.Atoi(c.Params("userId"))
+		if err != nil {
+			logger.Warnf("Invalid websocket id provided by user %s", userId)
+			_ = c.Close()
 			return
 		}
+		// parse the id to UUID format
+		idPreParse := c.Params("id")
+		u, err := uuid.Parse(idPreParse)
+		if err != nil {
+			logger.Warnf("user id %s tried to authenticate ws:// with invalid id %s", userId, idPreParse)
+			_ = c.Close()
+			return
+		}
+		_, valid := h.clients[userId][u]
+		if !valid {
+			logger.Warnf("user id %s tried to authenticate with unauthenticated id %s", userId, idPreParse)
+			_ = c.Close()
+			return
+		}
+
+		logger.Info("Loading websocket connections for user_id", userId)
 		h.mu.Lock()
 		h.clients[userId][u] = &Client{conn: c, alive: true}
 		h.mu.Unlock()
+
+		// send the last listening song when starting the websocket connection
+		currentSong := ops.GetCurrentSongForUserId(ctx, userId)
+		lyrics, err := sl.GetLyrics(slTypes.Song{Track: currentSong.Track, Artist: currentSong.Artist})
+		if err != nil {
+			logger.Warnf("Error fetching lyrics for the song %s", currentSong)
+			lyrics = ""
+		}
+		_ = c.WriteJSON(map[string]string{
+			"track":  currentSong.Track,
+			"artist": currentSong.Artist,
+			"lyrics": lyrics,
+		})
 
 		for {
 			time.Sleep(3 * time.Second)
@@ -480,7 +504,7 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 				if err != nil {
 					// the user might have closed the connection
 					h.mu.Lock()
-					h.clients[userId][u].conn.Close()
+					_ = h.clients[userId][u].conn.Close()
 					h.clients[userId][u].alive = false
 					delete(h.clients[userId], u)
 					h.mu.Unlock()
@@ -488,7 +512,6 @@ func Initialize(cfg config.Config, ctx *types.Context) (*fiber.App, error) {
 				}
 
 			}
-
 
 		}
 
