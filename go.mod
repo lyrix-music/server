@@ -14,7 +14,7 @@ require (
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/shkh/lastfm-go v0.0.0-20191215035245-89a801c244e0
 	github.com/smartystreets/goconvey v1.6.4 // indirect
-	github.com/srevinsaju/swaglyrics-go v0.0.0-20210622060022-649d049cd475
+	github.com/srevinsaju/swaglyrics-go v0.0.1
 	github.com/withmandala/go-log v0.1.0
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
