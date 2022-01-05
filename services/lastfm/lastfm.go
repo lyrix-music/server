@@ -1,12 +1,13 @@
 package lastfm
 
 import (
+	"os"
+
 	"github.com/jinzhu/gorm"
 	"github.com/lyrix-music/server/config"
 	"github.com/lyrix-music/server/types"
 	"github.com/shkh/lastfm-go/lastfm"
 	"github.com/withmandala/go-log"
-	"os"
 )
 
 var logger = log.New(os.Stdout)

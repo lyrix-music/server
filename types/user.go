@@ -65,11 +65,15 @@ type LikedSong struct {
 }
 
 func (sm CurrentListeningSongLocal) GetFirstArtist() string {
-	if strings.Contains(sm.Artist, ", ") {
-		firstArtist := strings.Split(sm.Artist, ",")[0]
+	artists := sm.Artist
+	if strings.Contains(sm.Artist, " & ") {
+		artists = strings.Split(sm.Artist, " & ")[0]
+	}
+	if strings.Contains(artists, ", ") {
+		firstArtist := strings.Split(artists, ",")[0]
 		return strings.Trim(firstArtist, " ")
 	}
-	return sm.Artist
+	return artists
 }
 
 func (sm CurrentListeningSongLocal) GetCleanedArtistName() string {
